@@ -14,23 +14,25 @@ import RolesPage from './pages/RolesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
+import ProfilePage from './pages/ProfilePage'
 
-function App(){
+function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Layout>
           <Routes>
-            <Route path='/login' element={<Login/>} />
-            <Route path='/register' element={<Register/>} />
-            <Route path='/dashboard' element={<Dashboard/>} />
-            <Route path='/projects' element={<ProjectsPage/>} />
-            <Route path='/tasks' element={<TasksPage/>} />
-            <Route path='/team' element={<TeamPage/>} />
-            <Route path='/roles' element={<RolesPage/>} />
-            <Route path='/analytics' element={<AnalyticsPage/>} />
-            <Route path='/reports' element={<ReportsPage/>} />
-            <Route path='/settings' element={<SettingsPage/>} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/register' element={<Register />} />
+            <Route path='/dashboard' element={<Dashboard />} />
+            <Route path='/projects' element={<ProjectsPage />} />
+            <Route path='/tasks' element={<TasksPage />} />
+            <Route path='/team' element={<TeamPage />} />
+            <Route path='/roles' element={<RolesPage />} />
+            <Route path='/analytics' element={<AnalyticsPage />} />
+            <Route path='/reports' element={<ReportsPage />} />
+            <Route path='/settings' element={<SettingsPage />} />
+            <Route path='/profile' element={<ProfilePage />} />
             <Route path='/' element={<Navigate to='/dashboard' />} />
           </Routes>
         </Layout>

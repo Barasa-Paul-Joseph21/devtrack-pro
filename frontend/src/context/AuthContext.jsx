@@ -1,29 +1,46 @@
-import React, {createContext, useContext, useEffect, useState} from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import api from '../services/api'
 
 const AuthContext = createContext(null)
 
-export function AuthProvider({ children }){
+function decodeToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return {
+      id: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
+      email: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
+      name: payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'],
+      role: payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'],
+    }
+  } catch {
+    return null
+  }
+}
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
 
-  useEffect(()=>{
+  useEffect(() => {
     const token = localStorage.getItem('token')
-    if(token){
-      // we could decode token to extract claims; keep simple
-      setUser({ token })
+    if (token) {
+      const info = decodeToken(token)
+      setUser({ token, ...info })
     }
   }, [])
 
-  async function login(email, password){
+  async function login(email, password) {
     const res = await api.post('/auth/login', { email, password })
-    localStorage.setItem('token', res.data.token)
-    setUser({ token: res.data.token })
+    const token = res.data.token
+    const info = decodeToken(token)
+    localStorage.setItem('token', token)
+    setUser({ token, ...info })
     return res
   }
 
-  function logout(){
+  function logout() {
     localStorage.removeItem('token')
     setUser(null)
+    window.location.href = '/login'
   }
 
   return (

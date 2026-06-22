@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using TaskManagerAPI.Data;
 using TaskManagerAPI.DTOs;
 using TaskManagerAPI.Models;
@@ -18,6 +19,34 @@ public class UsersController : ControllerBase
     {
         _db = db;
         _tokenService = tokenService;
+    }
+
+    // Current user: get own profile
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetMe()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+        return Ok(new { user.Id, user.FullName, user.Email, user.Role, user.CreatedAt });
+    }
+
+    // Current user: change password
+    [HttpPut("me/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        if (!_tokenService.VerifyPassword(user.PasswordHash, dto.CurrentPassword))
+            return BadRequest(new { message = "Current password is incorrect" });
+
+        user.PasswordHash = _tokenService.HashPassword(dto.NewPassword);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Password updated successfully" });
     }
 
     // Admin only: list users

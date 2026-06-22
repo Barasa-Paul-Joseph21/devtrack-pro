@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { FolderOpen, Zap, CheckCircle2, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import api from '../services/api'
 
-export default function Dashboard(){
+export default function Dashboard() {
   const [stats, setStats] = useState(null)
 
   const fetchStats = useCallback(() => {
@@ -21,24 +22,27 @@ export default function Dashboard(){
     }
   }, [fetchStats])
 
-  const StatCard = ({ icon: Icon, label, value, sublabel, color }) => (
-    <motion.div
-      whileHover={{ y: -2 }}
-      className="bg-slate-800 border border-slate-700 p-6 rounded-lg"
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-slate-400 text-xs uppercase tracking-wide">{label}</p>
-          <p className="text-3xl font-bold text-white mt-2">
-            {value ?? <span className="text-slate-600 animate-pulse">—</span>}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">{sublabel}</p>
+  const StatCard = ({ icon: Icon, label, value, sublabel, color, to }) => (
+    <Link to={to}>
+      <motion.div
+        whileHover={{ y: -3, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+        whileTap={{ scale: 0.98 }}
+        className="bg-slate-800 border border-slate-700 p-6 rounded-lg cursor-pointer hover:border-slate-600 transition-colors"
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-slate-400 text-xs uppercase tracking-wide">{label}</p>
+            <p className="text-3xl font-bold text-white mt-2">
+              {value ?? <span className="text-slate-600 animate-pulse">—</span>}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">{sublabel}</p>
+          </div>
+          <div className={`${color} p-3 rounded-lg`}>
+            <Icon className="text-white" size={20} />
+          </div>
         </div>
-        <div className={`${color} p-3 rounded-lg`}>
-          <Icon className="text-white" size={20} />
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   )
 
   const s = stats
@@ -55,6 +59,7 @@ export default function Dashboard(){
           value={s?.totalProjects}
           sublabel={s ? `+${s.projectsThisMonth} this month` : '—'}
           color="bg-blue-900/30"
+          to="/projects"
         />
         <StatCard
           icon={Zap}
@@ -62,6 +67,7 @@ export default function Dashboard(){
           value={s?.activeTasks}
           sublabel={s ? `${s.urgentTasks} urgent` : '—'}
           color="bg-green-900/30"
+          to="/tasks"
         />
         <StatCard
           icon={CheckCircle2}
@@ -69,6 +75,7 @@ export default function Dashboard(){
           value={s?.completedTasks}
           sublabel={s ? `${s.efficiencyPct}% efficiency` : '—'}
           color="bg-purple-900/30"
+          to="/tasks"
         />
         <StatCard
           icon={Users}
@@ -76,12 +83,12 @@ export default function Dashboard(){
           value={s?.teamMembers}
           sublabel={s ? `+${s.membersThisMonth} this month` : '—'}
           color="bg-orange-900/30"
+          to="/team"
         />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Trend Chart */}
         <motion.div className="lg:col-span-2 bg-gradient-to-b from-slate-900/50 to-slate-900/30 border border-slate-800 p-6 rounded-xl shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -98,7 +105,6 @@ export default function Dashboard(){
           </div>
         </motion.div>
 
-        {/* Project Progress */}
         <motion.div className="bg-gradient-to-b from-slate-900/50 to-slate-900/30 border border-slate-800 p-6 rounded-xl shadow-sm">
           <h3 className="text-white font-semibold mb-4">Project Progress</h3>
           <p className="text-slate-400 text-sm mb-4">Task completion rate</p>
@@ -137,7 +143,7 @@ export default function Dashboard(){
         <motion.div className="lg:col-span-2 bg-gradient-to-b from-slate-900/50 to-slate-900/30 border border-slate-800 p-6 rounded-xl shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-white font-semibold">Recent Activity</h3>
-            <a href="#" className="text-blue-400 text-sm hover:underline">View All →</a>
+            <Link to="/reports" className="text-blue-400 text-sm hover:underline">View All →</Link>
           </div>
           <div className="space-y-4">
             {[
