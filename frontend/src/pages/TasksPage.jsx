@@ -104,11 +104,14 @@ function TaskForm({ initial, projects, onSubmit, onClose, loading }) {
       </div>
       <div>
         <label className="text-sm text-slate-300 font-medium block mb-1.5">Project *</label>
-        <select value={form.projectId} onChange={e => set('projectId', +e.target.value)} required
+        <select value={form.projectId} onChange={e => set('projectId', e.target.value ? parseInt(e.target.value) : '')} required
           className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2.5 focus:outline-none focus:border-blue-500">
           <option value="">— Select a project —</option>
-          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {projects.filter(p => p.status !== 'Archived').map(p => <option key={p.id} value={p.id}>{p.name} ({p.status})</option>)}
         </select>
+        {projects.filter(p => p.status !== 'Archived').length === 0 && (
+          <p className="text-xs text-yellow-400 mt-1">⚠ No active projects found. Create a project first.</p>
+        )}
       </div>
       <div>
         <label className="text-sm text-slate-300 font-medium block mb-1.5">Due Date</label>
