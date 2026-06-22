@@ -21,15 +21,22 @@ public class UsersController : ControllerBase
         _tokenService = tokenService;
     }
 
-    // Current user: get own profile
+    // Current user profile
     [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> GetMe()
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _db.Users
+            .Select(u => new {
+                u.Id, u.FullName, u.Email, u.Role, u.CreatedAt,
+                TaskCount = _db.Tasks.Count(t => t.AssignedTo == u.Id),
+                CompletedTaskCount = _db.Tasks.Count(t => t.AssignedTo == u.Id && t.Status == "Completed"),
+                ProjectCount = _db.Projects.Count(p => p.CreatedBy == u.Id)
+            })
+            .FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return NotFound();
-        return Ok(new { user.Id, user.FullName, user.Email, user.Role, user.CreatedAt });
+        return Ok(user);
     }
 
     // Current user: change password
@@ -49,16 +56,46 @@ public class UsersController : ControllerBase
         return Ok(new { message = "Password updated successfully" });
     }
 
-    // Admin only: list users
+    // All authenticated users: list team members
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _db.Users.Select(u => new { u.Id, u.FullName, u.Email, u.Role, u.CreatedAt }).ToListAsync();
+        var users = await _db.Users
+            .OrderBy(u => u.FullName)
+            .Select(u => new {
+                u.Id, u.FullName, u.Email, u.Role, u.CreatedAt,
+                TaskCount = _db.Tasks.Count(t => t.AssignedTo == u.Id),
+                CompletedTaskCount = _db.Tasks.Count(t => t.AssignedTo == u.Id && t.Status == "Completed"),
+                ProjectCount = _db.Projects.Count(p => p.CreatedBy == u.Id)
+            })
+            .ToListAsync();
         return Ok(users);
     }
 
-    // Admin: create user (team member)
+    // Get single user profile
+    [HttpGet("{id}")]
+    [Authorize]
+    public async Task<IActionResult> GetOne(int id)
+    {
+        var user = await _db.Users
+            .Select(u => new {
+                u.Id, u.FullName, u.Email, u.Role, u.CreatedAt,
+                TaskCount = _db.Tasks.Count(t => t.AssignedTo == u.Id),
+                CompletedTaskCount = _db.Tasks.Count(t => t.AssignedTo == u.Id && t.Status == "Completed"),
+                ProjectCount = _db.Projects.Count(p => p.CreatedBy == u.Id),
+                RecentTasks = _db.Tasks.Where(t => t.AssignedTo == u.Id)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .Take(5)
+                    .Select(t => new { t.Id, t.Title, t.Status, t.Priority, t.DueDate })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null) return NotFound();
+        return Ok(user);
+    }
+
+    // Admin: create user
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(RegisterDto dto)
@@ -76,18 +113,62 @@ public class UsersController : ControllerBase
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetAll), new { id = user.Id }, new { user.Id, user.FullName, user.Email, user.Role });
+        return CreatedAtAction(nameof(GetOne), new { id = user.Id }, new { user.Id, user.FullName, user.Email, user.Role, user.CreatedAt });
     }
 
-    // Admin: update role
-    [HttpPut("{id}/role")]
+    // Admin: update user
+    [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateRole(int id, [FromQuery] string role)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
         var user = await _db.Users.FindAsync(id);
         if (user == null) return NotFound();
-        user.Role = role;
+
+        if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName;
+        if (!string.IsNullOrWhiteSpace(dto.Email)) user.Email = dto.Email;
+        if (!string.IsNullOrWhiteSpace(dto.Role)) user.Role = dto.Role;
+
+        await _db.SaveChangesAsync();
+        return Ok(new { user.Id, user.FullName, user.Email, user.Role });
+    }
+
+    // Admin: update role only
+    [HttpPatch("{id}/role")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateRole(int id, [FromBody] RoleUpdateDto dto)
+    {
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+        user.Role = dto.Role;
+        await _db.SaveChangesAsync();
+        return Ok(new { user.Id, user.Role });
+    }
+
+    // Admin: delete user
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        if (id == currentUserId) return BadRequest(new { message = "You cannot delete your own account" });
+
+        var user = await _db.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        _db.Users.Remove(user);
         await _db.SaveChangesAsync();
         return NoContent();
     }
+}
+
+public class UpdateUserDto
+{
+    public string? FullName { get; set; }
+    public string? Email { get; set; }
+    public string? Role { get; set; }
+}
+
+public class RoleUpdateDto
+{
+    public string Role { get; set; } = string.Empty;
 }

@@ -8,16 +8,19 @@ export default function Login(){
   const [password,setPassword] = useState('')
   const [loading,setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
   const { login } = useAuth()
 
   const submit = async e => {
     e.preventDefault()
     setLoading(true)
+    setError('')
     try{
       await login(email, password)
       window.location.href = '/dashboard'
     }catch(err){
-      alert('Login failed')
+      const msg = err?.response?.data?.message || 'Invalid email or password. Please check your credentials or register a new account.'
+      setError(msg)
     }finally{ setLoading(false) }
   }
 
@@ -63,6 +66,13 @@ export default function Login(){
           </div>
 
           {/* Form */}
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/40 text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
+              {error}
+            </motion.div>
+          )}
+
           <motion.form onSubmit={submit} className="space-y-5">
             <div>
               <label className="text-slate-300 text-sm font-medium block mb-2">Email Address</label>
