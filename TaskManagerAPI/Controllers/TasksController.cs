@@ -22,14 +22,29 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var tasks = await _db.Tasks.Include(t => t.Assignee).Include(t => t.Project).ToListAsync();
+        var tasks = await _db.Tasks
+            .Include(t => t.Assignee)
+            .Include(t => t.Project)
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new
+            {
+                t.Id, t.Title, t.Description, t.Priority, t.Status,
+                t.ProjectId, t.AssignedTo, t.CreatedBy, t.DueDate, t.CreatedAt,
+                ProjectName = t.Project != null ? t.Project.Name : null,
+                AssigneeName = t.Assignee != null ? t.Assignee.FullName : null,
+                AssigneeEmail = t.Assignee != null ? t.Assignee.Email : null
+            })
+            .ToListAsync();
         return Ok(tasks);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        var task = await _db.Tasks.Include(t => t.Assignee).Include(t => t.Project).FirstOrDefaultAsync(t => t.Id == id);
+        var task = await _db.Tasks
+            .Include(t => t.Assignee)
+            .Include(t => t.Project)
+            .FirstOrDefaultAsync(t => t.Id == id);
         if (task == null) return NotFound();
         return Ok(task);
     }
@@ -39,6 +54,10 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Create(TaskDto dto)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+        var projectExists = await _db.Projects.AnyAsync(p => p.Id == dto.ProjectId);
+        if (!projectExists) return BadRequest(new { message = "Project not found" });
+
         var task = new TaskItem
         {
             Title = dto.Title,
@@ -53,7 +72,20 @@ public class TasksController : ControllerBase
 
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
+
+        var created = await _db.Tasks
+            .Include(t => t.Assignee)
+            .Include(t => t.Project)
+            .FirstAsync(t => t.Id == task.Id);
+
+        return CreatedAtAction(nameof(Get), new { id = task.Id }, new
+        {
+            created.Id, created.Title, created.Description, created.Priority, created.Status,
+            created.ProjectId, created.AssignedTo, created.CreatedBy, created.DueDate, created.CreatedAt,
+            ProjectName = created.Project?.Name,
+            AssigneeName = created.Assignee?.FullName,
+            AssigneeEmail = created.Assignee?.Email
+        });
     }
 
     [HttpPut("{id}")]
@@ -71,7 +103,42 @@ public class TasksController : ControllerBase
         task.DueDate = dto.DueDate;
 
         await _db.SaveChangesAsync();
-        return NoContent();
+
+        var updated = await _db.Tasks
+            .Include(t => t.Assignee)
+            .Include(t => t.Project)
+            .FirstAsync(t => t.Id == id);
+
+        return Ok(new
+        {
+            updated.Id, updated.Title, updated.Description, updated.Priority, updated.Status,
+            updated.ProjectId, updated.AssignedTo, updated.CreatedBy, updated.DueDate, updated.CreatedAt,
+            ProjectName = updated.Project?.Name,
+            AssigneeName = updated.Assignee?.FullName,
+            AssigneeEmail = updated.Assignee?.Email
+        });
+    }
+
+    [HttpPatch("{id}/status")]
+    [Authorize]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] TaskStatusDto dto)
+    {
+        var task = await _db.Tasks.FindAsync(id);
+        if (task == null) return NotFound();
+        task.Status = dto.Status;
+        await _db.SaveChangesAsync();
+        return Ok(new { task.Id, task.Status });
+    }
+
+    [HttpPatch("{id}/priority")]
+    [Authorize]
+    public async Task<IActionResult> UpdatePriority(int id, [FromBody] TaskPriorityDto dto)
+    {
+        var task = await _db.Tasks.FindAsync(id);
+        if (task == null) return NotFound();
+        task.Priority = dto.Priority;
+        await _db.SaveChangesAsync();
+        return Ok(new { task.Id, task.Priority });
     }
 
     [HttpDelete("{id}")]
@@ -99,3 +166,6 @@ public class TasksController : ControllerBase
         return Ok(task);
     }
 }
+
+public class TaskStatusDto { public string Status { get; set; } = string.Empty; }
+public class TaskPriorityDto { public string Priority { get; set; } = string.Empty; }

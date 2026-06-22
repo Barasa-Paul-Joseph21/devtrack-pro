@@ -1,30 +1,30 @@
 {
   "format": 1,
   "restore": {
-    "/home/josh/DEVELOPER TRACKING AGENT/TaskManagerAPI/TaskManagerAPI.csproj": {}
+    "/home/runner/workspace/TaskManagerAPI/TaskManagerAPI.csproj": {}
   },
   "projects": {
-    "/home/josh/DEVELOPER TRACKING AGENT/TaskManagerAPI/TaskManagerAPI.csproj": {
+    "/home/runner/workspace/TaskManagerAPI/TaskManagerAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/josh/DEVELOPER TRACKING AGENT/TaskManagerAPI/TaskManagerAPI.csproj",
+        "projectUniqueName": "/home/runner/workspace/TaskManagerAPI/TaskManagerAPI.csproj",
         "projectName": "TaskManagerAPI",
-        "projectPath": "/home/josh/DEVELOPER TRACKING AGENT/TaskManagerAPI/TaskManagerAPI.csproj",
-        "packagesPath": "/home/josh/.nuget/packages/",
-        "outputPath": "/home/josh/DEVELOPER TRACKING AGENT/TaskManagerAPI/obj/",
+        "projectPath": "/home/runner/workspace/TaskManagerAPI/TaskManagerAPI.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/workspace/TaskManagerAPI/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/josh/.nuget/NuGet/NuGet.Config"
+          "/home/runner/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net7.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net7.0": {
+            "targetAlias": "net7.0",
             "projectReferences": {}
           }
         },
@@ -35,25 +35,25 @@
         }
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net7.0": {
+          "targetAlias": "net7.0",
           "dependencies": {
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[7.0.0, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[7.0.0, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[7.0.0, )"
             },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
+            "Microsoft.EntityFrameworkCore.Sqlite": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[7.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -79,7 +79,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.128/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/nix/store/4k08ckhym1bcwnsk52j201a80l2xrkhp-dotnet-sdk-7.0.410/sdk/7.0.410/RuntimeIdentifierGraph.json"
         }
       }
     }
