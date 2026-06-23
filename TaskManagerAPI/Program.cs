@@ -12,9 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext - SQLite
+// DbContext - SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // CORS
 builder.Services.AddCors(options =>
@@ -51,8 +51,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<TokenService>();
 
-// Listen on port 8000
-builder.WebHost.UseUrls("http://localhost:8000");
+// Listen on port 8000 or the dynamic port provided by hosting platforms (e.g., Railway)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8000";
+builder.WebHost.UseUrls($"http://*:{port}");
 
 var app = builder.Build();
 
